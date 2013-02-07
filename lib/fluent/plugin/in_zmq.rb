@@ -96,9 +96,6 @@ class ZMQInput < Input
   def on_message(msg)
     # TODO format error
     tag = msg[0].to_s
-
-
-
     entries = msg[1]
 
     if entries.class == String
@@ -117,7 +114,7 @@ class ZMQInput < Input
       }
       Engine.emit_stream(tag, es)
     else
-      # Message
+      # Message      
       time = Integer(msg[1])
       time = Engine.now if time == 0
       record = msg[2]
