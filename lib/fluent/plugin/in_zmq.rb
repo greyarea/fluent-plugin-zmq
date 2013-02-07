@@ -96,12 +96,33 @@ class ZMQInput < Input
   def on_message(msg)
     # TODO format error
     tag = msg[0].to_s
-    time = Integer(msg[1])
-    time = Engine.now if time == 0
-    record = msg[2]
-    Engine.emit(tag, time, record)
+
+
+
+    entries = msg[1]
+
+    if entries.class == String
+      # PackedForward
+      es = MessagePackEventStream.new(entries, @cached_unpacker)
+      Engine.emit_stream(tag, es) 
+
+    elsif entries.class == Array
+      # Forward
+      es = MultiEventStream.new
+      entries.each {|e|
+        time = e[0].to_i
+        time = (now ||= Engine.now) if time == 0
+        record = e[1]
+        es.add(time, record)
+      }
+      Engine.emit_stream(tag, es)
+    else
+      # Message
+      time = Integer(msg[1])
+      time = Engine.now if time == 0
+      record = msg[2]
+      Engine.emit(tag, time, record)
+    end
   end
-
 end
-
 end
